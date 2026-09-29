@@ -4,6 +4,37 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.103.1-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Scikit-Learn](https://img.shields.io/badge/scikit--learn-1.3.1-F7931E.svg?logo=scikit-learn)](https://scikit-learn.org/)
 [![Plotly](https://img.shields.io/badge/Plotly.js-Interactive-3f4f75.svg?logo=plotly)](https://plotly.com/javascript/)
+## 🎯 Problem Statement
+
+Power quality disturbances such as voltage sags, voltage swells, harmonics, and
+overcurrent conditions can affect the reliability and performance of electrical
+systems. Traditional protection systems generally rely on predefined thresholds
+and protection rules.
+
+This project explores an AI-assisted approach that analyzes electrical waveforms,
+extracts signal characteristics using Digital Signal Processing (DSP), and uses
+Machine Learning to classify different power-quality disturbances automatically.
+
+## 🔄 How It Works
+
+The system follows a complete signal-analysis and machine-learning pipeline:
+
+```text
+Electrical Waveform
+        ↓
+Data Preprocessing
+        ↓
+DSP Feature Extraction
+        ↓
+RMS / Peak / THD / FFT Features
+        ↓
+Random Forest Classifier
+        ↓
+Fault Classification
+        ↓
+FastAPI Backend
+        ↓
+Interactive Plotly Dashboard
 
 An enterprise-grade, AI-powered diagnostic tool that uses Digital Signal Processing (DSP) and Machine Learning to instantly classify electrical power grid disturbances. 
 
