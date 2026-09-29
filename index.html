@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Grid Analyzer</title>
+    <!-- Load Plotly.js for the interactive graph -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; padding: 20px; }
+        .container { display: flex; gap: 20px; }
+        .sidebar, .main { background: #1e1e1e; padding: 20px; border-radius: 8px; }
+        .sidebar { width: 250px; }
+        .main { flex-grow: 1; }
+        select, button { width: 100%; padding: 10px; margin-top: 10px; background: #333; color: white; border: none; }
+        button { background: #00F1FF; color: black; font-weight: bold; cursor: pointer; }
+        .metrics { display: flex; justify-content: space-between; margin-top: 20px; }
+        .metric-box { background: #333; padding: 15px; border-radius: 5px; width: 30%; text-align: center; }
+        #diagnosis-box { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; font-size: 1.2em; font-weight: bold; background: #333;}
+    </style>
+</head>
+<body>
+
+    <h2>⚡ Power Grid Fault Analyzer (Full-Stack)</h2>
+    
+    <div class="container">
+        <div class="sidebar">
+            <label>Select Grid Condition:</label>
+            <!-- The onchange event automatically triggers the analysis when you select a new fault -->
+            <select id="faultType" onchange="analyzeSignal()">
+                <option value="Normal">Normal</option>
+                <option value="Voltage Sag">Voltage Sag</option>
+                <option value="Voltage Swell">Voltage Swell</option>
+                <option value="Overcurrent">Overcurrent</option>
+                <option value="Harmonics">Harmonics</option>
+            </select>
+            <!-- Button kept as a manual trigger fallback -->
+            <button onclick="analyzeSignal()">Run Analysis</button>
+        </div>
+
+        <div class="main">
+            <div id="graph"></div>
+            
+            <div class="metrics">
+                <div class="metric-box"><strong>RMS Voltage</strong><br><span id="rms">-- V</span></div>
+                <div class="metric-box"><strong>Peak Voltage</strong><br><span id="peak">-- V</span></div>
+                <div class="metric-box"><strong>THD</strong><br><span id="thd">-- %</span></div>
+            </div>
+
+            <div id="diagnosis-box">AI Diagnosis: Waiting for data...</div>
+        </div>
+    </div>
+
+    <script>
+        // Upgraded Plotly configuration for a MATLAB/Simulink feel
+        const layout = {
+            paper_bgcolor: '#1e1e1e', 
+            plot_bgcolor: '#1e1e1e', 
+            font: {color: 'white'}, 
+            margin: {t: 30, b: 30, l: 40, r: 20},
+            xaxis: { 
+                title: 'Time (seconds)',
+                rangeslider: { visible: true } // Adds the interactive timeline slider below the graph
+            },
+            yaxis: { title: 'Voltage (V)' }
+        };
+
+        const config = {
+            responsive: true,
+            scrollZoom: true, // Enables mouse-wheel zooming
+            displaylogo: false
+        };
+
+        // Initialize the graph with the new layout and config
+        Plotly.newPlot('graph', [{ x: [], y: [], type: 'scatter', line: {color: '#00F1FF'} }], layout, config);
+
+        async function analyzeSignal() {
+            const faultType = document.getElementById('faultType').value;
+            
+            // Send the JSON request to the FastAPI Python Server
+            const response = await fetch('http://localhost:8000/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fault_type: faultType })
+            });
+            
+            const data = await response.json();
+
+            // Update Graph with the full 1.0 second waveform
+            Plotly.update('graph', { x: [data.time], y: [data.voltage] });
+
+            // Update Metrics
+            document.getElementById('rms').innerText = data.metrics.rms + " V";
+            document.getElementById('peak').innerText = data.metrics.peak + " V";
+            document.getElementById('thd').innerText = data.metrics.thd + " %";
+
+            // Update Diagnosis Box color and text based on AI prediction
+            const diagBox = document.getElementById('diagnosis-box');
+            diagBox.innerText = "AI Diagnosis: " + data.diagnosis;
+            diagBox.style.background = data.diagnosis === "Normal" ? "#1e5c2b" : "#7d1919";
+        }
+        
+        // Automatically run analysis on page load to show the normal wave immediately
+        window.onload = analyzeSignal;
+    </script>
+</body>
+</html>
